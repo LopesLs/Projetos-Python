@@ -1,18 +1,20 @@
 # Chamando funções
-from functions.database_functions import *
-from functions.security_functions import *
-from functions.menu_display import *
+from functions.bdfunctions import *
+from functions.defs import *
 
 # Conectando ao banco de dados e criando o cursor
 database = conectar('Banco.db')
 cursor = database.cursor()
 cursor.execute(
-    "CREATE TABLE IF NOT EXISTS contas (nome TEXT PRIMARY KEY, senha TEXT, saldo REAL)")
+    "CREATE TABLE IF NOT EXISTS contas(nome text, senha integer, saldo float, criado_em datetime)")
+type_menu = 'default'
 
-print(f"\nBem vindos ao nosso banco Carlos SoulBank para poder ter acesso completo ao sistema, crie uma conta. Entrada as {mostrar_hora()}.\n\nINFO: Lembre-se que isso é um algoritmo simples que simula um banco, então todas as criações de contas infelizmente ainda são localmente\n")
+print(
+    f"\nBem vindos ao nosso banco Carlos SoulBank para poder ter acesso completo ao sistema, crie uma conta. Entrada as {hora()}.\n")
+
 
 while True:
-    mostrar_menu_inicial()
+    menu_inicial()
 
     try:
         opcao = int(input("\nDigite sua opção: "))
@@ -29,14 +31,9 @@ A opção de Criar Conta deve receber:
 - senha (5 dígitos)""")
 
         conta = input("\nInforme o nome do usúario: ")
-        nomes = []
+        nomes = cursor.execute('SELECT nome from contas')
 
-        cursor.execute('SELECT nome from contas')
-
-        for nome in cursor.fetchall():
-            nomes.append(nome[0])
-
-        if conta in nomes:
+        if conta in nomes.fetchall():
             print("\nOlá já existe um usuário com esse mesmo nome, tente outro.\n")
             continue
 
@@ -47,26 +44,28 @@ A opção de Criar Conta deve receber:
                 print("\nSenha permitida até 5 digitos!")
 
             else:
-                cursor.execute(
-                    f"INSERT INTO contas VALUES ('{conta}', '{criptografar(senha)}', 0)")
+                cursor.execute("INSERT INTO contas(conta, senha, saldo, criado_em) VALUES (%s, %s, %s, %s)", (
+                    conta, criptografar(senha), 0, datetime.now()))
                 database.commit()
-
                 print("\nConta criada com sucesso!\n")
 
     elif opcao == 2:
+        dados = cursor.execute('SELECT nome, senha from contas')
+        dados = dados.fetchall()
+
         conta = input("\nInforme o nome do usuário: ")
         senha = input("\nInforme a Senha: ")
-        cursor.execute('SELECT nome, senha FROM contas')
 
-        if verificar_login(conta, senha, cursor.fetchall()):
+        if login(conta, senha, dados):
             print(f'\nlogado como {conta}!\n')
 
             while True:
-                mostrar_menu_in_account()
+                menu_in_account()
+
+                opcao = input("\nDigite sua opção: ")
 
                 try:
                     opcao = int(input("\nDigite sua opção: "))
-                
                 except ValueError:
                     print(f"\nInforme as opção em números!\n")
                     continue
@@ -78,8 +77,8 @@ A opção de Criar Conta deve receber:
                         f"SELECT saldo FROM contas WHERE conta = '{conta}' ")
 
                     print(f"\nInformações Da Conta\n"
-                          f"Conta: {conta}\n"
-                          f"Saldo: {saldo}\n")
+                        f"Conta: {conta}\n"
+                        f"Saldo: {saldo}\n")
 
                 elif opcao == 2:
                     print("\nInfo: Opção Excluir Conta foi escolhida com sucesso!\n")
@@ -97,11 +96,11 @@ A opção de Criar Conta deve receber:
 
                         if senha in senhas:
                             confirmacao = input(
-                                "\nTem certeza que quer excluir?[S/N] ").lower()
+                            "\nTem certeza que quer excluir?[S/N] ").lower()
 
                             if "si" in confirmacao:
                                 cursor.execute(
-                                    f"DELETE FROM contas WHERE conta = '{conta}' ")
+                                f"DELETE FROM contas WHERE conta = '{conta}' ")
                                 database.commit()
                                 print("\nA sua conta foi apagada com sucesso!\n")
 
@@ -184,23 +183,13 @@ A opção de Criar Conta deve receber:
                         print("\nInfo: O saque foi efetuado com sucesso!\n")
 
                 elif opcao == 5:
-                    print('\nVocê saiu da sua conta\n')
+                    print("\nInfo: Opção Sair do progama foi escolhida com sucesso!")
                     break
-
+                
                 else:
                     print(
                         "\nPara cada opção existe um número, preste atenção na tabela!\n")
-        else:
-            print('\nNão encontramos sua conta, revise os dados informados e tente novamente.\n')
-
-    elif opcao == 3:
-        print('\nNós sentimos muito se causamos desconfortos com nosso software, \nvocê pode enviar um email para lopes.carlos@academico.ifpb.edu.br iremos responder o mais rápido que pudermos\n')
-
-    elif opcao == 4:
-        break
-
-    else:
-        print('\nNão existe esta opção no nosso menu :), reveja com cuidado!\n')
+            break
 
 print(
-    f"\nNós da Carlos SoulBank agradeçemos pela preferência. Saída as {mostrar_hora()}.")
+    f"\nNós da Carlos SoulBank agradeçemos pela preferência. Saída as {hora()}.")
