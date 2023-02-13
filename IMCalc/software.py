@@ -1,58 +1,86 @@
-import customtkinter 
+import customtkinter
 
-class Software(customtkinter.CTk):
+customtkinter.set_appearance_mode("System")
+customtkinter.set_default_color_theme("blue")
+
+class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
-        customtkinter.set_appearance_mode("dark")
-        customtkinter.set_default_color_theme("dark-blue")
-
+        
+        # Configure Entire Windows
         self.title("IMCalc")
-        self.geometry("500x300")
-        self.resizable(False, False)
+        self.geometry(f"{800}x{500}")
 
+        # Configuring Layout
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # Create sidebar frame with widgets
+        self.sidebarFrame = customtkinter.CTkFrame(self, width=100, corner_radius=0)
+        self.sidebarFrame.grid(row=0, column=0, sticky="nsew")
+        self.sidebarFrame.grid_rowconfigure(3, weight=1)
+        
+        self.logoLabel = customtkinter.CTkLabel(self.sidebarFrame, text="IMCalc", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.logoLabel.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        # Creating All Frames
+        self.contentFrame = customtkinter.CTkFrame(self, width=200)
+        self.contentFrame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+        self.imcFrame = customtkinter.CTkFrame(self.contentFrame)
+        self.imcActive = False
+        self.aboutUsFrame = customtkinter.CTkFrame(self.contentFrame)
+        self.aboutActive = False
         self.style()
-        self.loginFrame()
+
+        # Creating Widgets
+        self.createWidgetsImc()
+        self.createWidgetsAboutUs()
+
+        self.sidebarButtonImc = customtkinter.CTkButton(self.sidebarFrame, text="Calcular IMC", command=self.activeImcFrame)
+        self.sidebarButtonImc.grid(row=1, column=0, padx=20, pady=10)
+        
+        self.sidebarButtonAboutUs = customtkinter.CTkButton(self.sidebarFrame, text="Sobre nós", command=self.activeAboutUsFrame)
+        self.sidebarButtonAboutUs.grid(row=2, column=0, padx=20, pady=10)
     
-    def loginFrame(self):
+        self.appearance_mode_label = customtkinter.CTkLabel(self.sidebarFrame, text="Appearance Mode:", anchor="w")
+        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebarFrame, values=["Light", "Dark"], command=self.change_appearance_mode_event)
+        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
 
-        self.loginWindow = customtkinter.CTkFrame(self)
-        self.loginWindow.pack(pady=20, padx=60, fill="both", expand=True)
+    def createWidgetsImc(self):
+        topText = customtkinter.CTkLabel(self.imcFrame, text="Calculando IMC", font=self.titleFont)
+        topText.pack(pady=12, padx=10)
+    
+    def createWidgetsAboutUs(self):
+        topText = customtkinter.CTkLabel(self.aboutUsFrame, text="Sobre Nós", font=self.titleFont)
+        topText.pack(pady=12, padx=10)
 
-        self.topText = customtkinter.CTkLabel(master=self.loginWindow, text="Seja bem-vindo(a)!", font=self.titleFont)
-        self.topText.pack(pady=12, padx=10)
+    def change_appearance_mode_event(self, new_appearance_mode: str):
+        customtkinter.set_appearance_mode(new_appearance_mode)
 
-        self.inputName = customtkinter.CTkEntry(master=self.loginWindow, placeholder_text="Insira seu nome")
-        self.inputName.configure(font=self.textFont, justify=customtkinter.CENTER)
-        self.inputName.pack(pady=12, padx=10)
+    def activeImcFrame(self):
+        if self.imcActive == False:
+            self.imcFrame.pack(pady=20, padx=50, fill="both", expand=True)
+            self.imcActive = True
+        else:
+            self.imcFrame.pack_forget()
+            self.imcActive = False
 
-        self.buttonNext = customtkinter.CTkButton(master=self.loginWindow, corner_radius=15, text="Entrar", command=self.imcFrame, font=self.textFont)
-        self.buttonNext.pack(pady=12, padx=10)
-
-        self.check = customtkinter.CTkCheckBox(master=self.loginWindow, text="Manter-se logado", font=self.textFont)
-        self.check.pack(pady=12, padx=10)
-
-    def imcFrame(self):
-        
-        print(self.inputName.get())
-        print(self.check.get())
-        
-        self.loginWindow.pack_forget()
-        
-        self.mainMenu = customtkinter.CTkFrame(self)
-        self.mainMenu.pack(pady=20, padx=60, fill="both", expand=True)
-
-        self.topText = customtkinter.CTkLabel(master=self.mainMenu, text="CalculandoIMC", font=self.titleFont)
-        self.topText.pack(pady=12, padx=10)
+    def activeAboutUsFrame(self):
+        if self.aboutActive == False:
+            self.aboutUsFrame.pack(pady=20, padx=50, fill="both", expand=True)
+            self.aboutActive = True
+        else:
+            self.aboutUsFrame.pack_forget()
+            self.aboutActive = False
 
     def style(self):
         self.titleFont = customtkinter.CTkFont(family="Miriam",size=24, weight="bold")
         self.textFont = customtkinter.CTkFont(family="Miriam Fixed", size=13)
 
 if __name__ == "__main__":
-    app = Software()
+    app = App()
     
-    # If the computer don't support to icons, then ingore it.
     try:
         app.iconbitmap("assets/icon/img0.ico")
     except:
