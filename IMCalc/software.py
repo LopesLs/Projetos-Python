@@ -1,6 +1,4 @@
 import customtkinter
-import tkinter.messagebox
-import tkinter
 from datetime import datetime
 
 customtkinter.set_appearance_mode("System")
@@ -13,8 +11,10 @@ class App(customtkinter.CTk):
         # Configure Entire Windows
         self.title("IMCalc")
         self.geometry(f"{1000}x{550}")
+        self.resizable(False, False)
+        self.style()
 
-        # Configuring Layout
+        # Configure Layout
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -22,8 +22,7 @@ class App(customtkinter.CTk):
         self.sidebarFrame = customtkinter.CTkFrame(self, width=100, corner_radius=0)
         self.sidebarFrame.grid(row=0, column=0, sticky="nsew")
         self.sidebarFrame.grid_rowconfigure(3, weight=1)
-        
-        self.logoLabel = customtkinter.CTkLabel(self.sidebarFrame, text="IMCalc", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.logoLabel = customtkinter.CTkLabel(self.sidebarFrame, text="IMCalc", font=self.logoFont)
         self.logoLabel.grid(row=0, column=0, padx=20, pady=(20, 10))
 
         # Creating All Frames
@@ -32,7 +31,7 @@ class App(customtkinter.CTk):
         self.imcFrame = customtkinter.CTkFrame(self.contentFrame)
         self.imcActive = False
         self.aboutUsFrame = customtkinter.CTkFrame(self.contentFrame)
-        self.aboutActive = False
+        self.aboutUsActive = False
         self.style()
 
         # Creating Widgets
@@ -66,14 +65,10 @@ class App(customtkinter.CTk):
         self.altura = customtkinter.CTkEntry(self.imcFrame, placeholder_text="Insira sua altura (m)", width=200, height=30, border_width=2, corner_radius=10, justify=customtkinter.CENTER)
         self.altura.grid(row=3, column=0, pady=12, padx=10)
 
-        self.resultImc = customtkinter.CTkLabel(self.imcFrame, text='Sem resultados ainda')
-        self.resultImc.grid(row=6, column=0, padx=10, pady=12)
+        self.resultImc = customtkinter.CTkLabel(self.imcFrame)
         
         buttonCalc = customtkinter.CTkButton(self.imcFrame, text="Calcular IMC", command=self.calcula_imc)
         buttonCalc.grid(row=4, column=0, pady=12, padx=10)
-
-        saveCalc = customtkinter.CTkButton(self.imcFrame, text="Salvar Resultado", command=self.save)
-        saveCalc.grid(row=5, column=0, pady=12, padx=10)
 
     def createWidgetsAboutUs(self):
         topText = customtkinter.CTkLabel(self.aboutUsFrame, text="Sobre Nós", font=self.titleFont)
@@ -87,58 +82,83 @@ class App(customtkinter.CTk):
         self.footer = customtkinter.CTkLabel(self.aboutUsFrame, text="Com muito amor e café S2")
         self.footer.pack(pady=12, padx=10)
 
-    def change_appearance_mode_event(self, new_appearance_mode: str):
-        customtkinter.set_appearance_mode(new_appearance_mode)
-
     def activeImcFrame(self):
         if self.imcActive == False:
-            self.imcFrame.pack(pady=20, padx=50, fill="both", expand=True, anchor=customtkinter.CENTER, side=customtkinter.TOP)
+            # Deactivate aboutUsFrame and Active AboutUsButton
+            self.aboutUsFrame.pack_forget()
+            self.aboutUsActive = False
+            self.sidebarButtonAboutUs.configure(state="normal")
+
+            # Active imcFrame and Deactivate ImcButton
+            self.imcFrame.pack(pady=20, padx=50, fill="both", expand=True, anchor=customtkinter.CENTER)
             self.imcActive = True
-        else:
-            self.imcFrame.pack_forget()
-            self.imcActive = False
+            self.sidebarButtonImc.configure(state="disabled")
 
     def activeAboutUsFrame(self):
-        if self.aboutActive == False:
+        if self.aboutUsActive == False:
+            # Deactivate imcFrame and Active imcButton
+            self.imcFrame.pack_forget()
+            self.imcActive = False
+            self.sidebarButtonImc.configure(state="normal")
+
+            # Active aboutUsFrame and Deactiavate aboutUsButton
             self.aboutUsFrame.pack(pady=20, padx=50, fill="both", expand=True)
-            self.aboutActive = True
+            self.aboutUsActive = True
+            self.sidebarButtonAboutUs.configure(state="disabled")
+
+    def calcula_imc(self):
+
+        # Verificando se tem dados faltando
+        if self.nome.get() == '' or self.peso.get() == '' or self.altura.get() == '':
+            self.resultImc.grid(row=6, column=0, padx=10, pady=12)
+            self.resultImc.configure(text='Dados Faltando', font=self.textFont)
+        
         else:
-            self.aboutUsFrame.pack_forget()
-            self.aboutActive = False
+            # Verificando se os valores informados são realmente números
+            try:
+                imc = float(self.peso.get()) / (float(self.altura.get()) ** 2)
+            
+            except ValueError:
+                self.resultImc.grid(row=6, column=0, padx=10, pady=12)
+                self.resultImc.configure(text='Informe valores inteiros ou reais', font=self.textFont)
+            
+            else: 
+                if float(self.peso.get()) <= 0 or float(self.altura.get()) <= 0:
+                    self.resultImc.grid(row=6, column=0, padx=10, pady=12)
+                    self.resultImc.configure(text='Apenas números positivos', font=self.textFont)
+                
+                else:
+                    if imc < 18.5:
+                        self.result = f'Seu IMC foi de {round(imc)}, classificado pela ONU como "Abaixo do peso"'
+                    elif 18.5 <= imc < 25:
+                        self.result = f'Seu IMC foi de {round(imc)}, classificado pela ONU como "Peso normal"'
+                    elif 25 <= imc < 30:
+                        self.result = f'Seu IMC foi de {round(imc)}, classificado pela ONU como "Sobrepeso"'
+                    elif 30 <= imc < 35:
+                        self.result = f'Seu IMC foi de {round(imc)}, classificado pela ONU como "Obesidade grau 1"'
+                    elif 35 <= imc < 40:
+                        self.result = f'Seu IMC foi de {round(imc)}, classificado pela ONU como  "Obesidade grau 2"'
+                    else:
+                        self.result = f'Seu IMC foi de {round(imc)}, classificado pela ONU como "Obesidade grau 3"'
+                    
+                    self.resultImc.grid(row=6, column=0, padx=10, pady=12)
+                    self.resultImc.configure(text=self.result, font=self.textFont)
+
+                    saveCalc = customtkinter.CTkButton(self.imcFrame, text="Salvar Resultado", command=self.save)
+                    saveCalc.grid(row=7, column=0, pady=12, padx=10)
+
+    def save(self):
+        # Salvando arquivos   
+        with open("dados.txt", "a") as file:
+            file.write(f"\nArquivamento\nNome: {self.nome.get()}\nPeso: {self.peso.get()}\nAltura: {self.altura.get()}\nSalvado em:{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\nIMC: {self.result}\n")
 
     def style(self):
         self.titleFont = customtkinter.CTkFont(family="Miriam",size=24, weight="bold")
         self.textFont = customtkinter.CTkFont(family="Miriam Fixed", size=13)
+        self.logoFont = customtkinter.CTkFont(family="Castellar", size=24, weight="bold")
     
-    def calcula_imc(self):
-        self.imc = float(self.peso.get()) / (float(self.altura.get()) ** 2)
-
-        if self.imc < 18.5:
-            self.result = f'{round(self.imc)}, Abaixo do peso'
-        elif 18.5 <= self.imc < 25:
-            self.result = f'{round(self.imc)}, Peso normal'
-        elif 25 <= self.imc < 30:
-            self.result = f'{round(self.imc)}, Sobrepeso'
-        elif 30 <= self.imc < 35:
-            self.result = f'{self.imc}, Obesidade grau 1'
-        elif 35 <= self.imc < 40:
-            self.result = f'{round(self.imc)}, Obesidade grau 2'
-        else:
-            self.result = f'{round(self.imc)}, Obesidade grau 3'
-        
-        print('calculei')
-        
-        self.resultImc.configure(text=self.result)
-    
-    def save(self):
-        name = self.nome.get()
-        weight = self.peso.get()
-        height = self.altura.get()
-        date = datetime.now()
-        result = self.result
-        
-        with open("dados.txt", "a") as file:
-            file.write(f"{name},{weight},{height},{date},{result}\n")
+    def change_appearance_mode_event(self, new_appearance_mode: str):
+        customtkinter.set_appearance_mode(new_appearance_mode)
 
 if __name__ == "__main__":
     app = App()
