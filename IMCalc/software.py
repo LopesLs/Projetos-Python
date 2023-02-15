@@ -46,7 +46,7 @@ class App(customtkinter.CTk):
     
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebarFrame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
-        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebarFrame, values=["Light", "Dark"], command=self.change_appearance_mode_event)
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebarFrame, values=["Dark", "Light"], command=self.change_appearance_mode_event)
         self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
 
     def createWidgetsImc(self):
@@ -66,6 +66,7 @@ class App(customtkinter.CTk):
         self.altura.grid(row=3, column=0, pady=12, padx=10)
 
         self.resultImc = customtkinter.CTkLabel(self.imcFrame)
+        self.saveReturn = customtkinter.CTkLabel(self.imcFrame)
         
         buttonCalc = customtkinter.CTkButton(self.imcFrame, text="Calcular IMC", command=self.calcula_imc)
         buttonCalc.grid(row=4, column=0, pady=12, padx=10)
@@ -151,6 +152,14 @@ class App(customtkinter.CTk):
         # Salvando arquivos   
         with open("dados.txt", "a") as file:
             file.write(f"\nArquivamento\nNome: {self.nome.get()}\nPeso: {self.peso.get()}\nAltura: {self.altura.get()}\nSalvado em:{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\nIMC: {self.result}\n")
+        
+        self.saveReturn.configure(text='Salvo com sucesso!')
+        self.saveReturn.grid(row=8, column=0, pady=12, padx=10)
+
+        self.imcFrame.after(2000, self.forget_save)
+    
+    def forget_save(self):
+        self.saveReturn.grid_forget()
 
     def style(self):
         self.titleFont = customtkinter.CTkFont(family="Miriam",size=24, weight="bold")
